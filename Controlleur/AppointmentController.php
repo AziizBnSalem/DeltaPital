@@ -1,6 +1,6 @@
 <?php
-require_once '../../Model/connexion.php';
-require_once '../../Model/Appointment.php';
+require_once __DIR__ . '../../Model/connexion.php';
+require_once __DIR__ . '../../Model/Appointment.php';
 
 class AppointmentController {
     private $conn;
@@ -11,50 +11,55 @@ class AppointmentController {
 
     // Get all pending appointments
     public function getPendingAppointments() {
-        $query = "SELECT * FROM appointments WHERE status = 'pending'";
+        $query = "SELECT a.id, a.user_name, a.date, a.time, a.status
+                 FROM appointments a
+                 WHERE a.status = 'pending'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     public function deleteAppointment($appointmentId) {
-        // SQL query to delete the appointment from the approved_appointments table
         $query = "DELETE FROM approved_appointments WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $appointmentId, PDO::PARAM_INT);
-    
-        // Execute the query and check if it was successful
         return $stmt->execute();
     }
-    
 
-    // Validate appointment (move to approved table and update status)
     public function validateAppointment($appointmentId) {
-        // Get the appointment details before moving it to the approved table
-        $query = "SELECT * FROM appointments WHERE id = :id AND status = 'pending'";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $appointmentId);
-        $stmt->execute();
-        $appointment = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $this->conn->beginTransaction();
 
-        if ($appointment) {
-            // Insert the validated appointment into the approved_appointments table
-            $insertQuery = "INSERT INTO approved_appointments (user_name, date, time, status) 
-                            VALUES (:user_name, :date, :time, 'approved')";
-            $stmt = $this->conn->prepare($insertQuery);
-            $stmt->bindParam(':user_name', $appointment['user_name']);
-            $stmt->bindParam(':date', $appointment['date']);
-            $stmt->bindParam(':time', $appointment['time']);
+            // Get the appointment details
+            $query = "SELECT * FROM appointments WHERE id = :id AND status = 'pending'";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $appointmentId, PDO::PARAM_INT);
             $stmt->execute();
+            $appointment = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Delete from pending appointments after moving to approved
-            $deleteQuery = "DELETE FROM appointments WHERE id = :id";
-            $stmt = $this->conn->prepare($deleteQuery);
-            $stmt->bindParam(':id', $appointmentId);
-            $stmt->execute();
+            if ($appointment) {
+                // Insert into approved_appointments
+                $insertQuery = "INSERT INTO approved_appointments (user_name, date, time, status) 
+                              VALUES (:user_name, :date, :time, 'approved')";
+                $stmt = $this->conn->prepare($insertQuery);
+                $stmt->bindParam(':user_name', $appointment['user_name']);
+                $stmt->bindParam(':date', $appointment['date']);
+                $stmt->bindParam(':time', $appointment['time']);
+                $stmt->execute();
 
-            return true;
+                // Delete from appointments
+                $deleteQuery = "DELETE FROM appointments WHERE id = :id";
+                $stmt = $this->conn->prepare($deleteQuery);
+                $stmt->bindParam(':id', $appointmentId);
+                $stmt->execute();
+
+                $this->conn->commit();
+                return true;
+            }
+            return false;
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            return false;
         }
-        return false;
     }
 
     // Get all approved appointments
@@ -63,6 +68,56 @@ class AppointmentController {
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Add this new method for creating appointments
+    public function createAppointment($user_name, $date, $time) {
+        try {
+            // Insert directly into appointments
+            $query = "INSERT INTO appointments (user_name, date, time, status) 
+                     VALUES (:user_name, :date, :time, 'pending')";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':user_name', $user_name);
+            $stmt->bindParam(':date', $date);
+            $stmt->bindParam(':time', $time);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    public function isTimeSlotAvailable($date, $time) {
+        $query = "SELECT COUNT(*) FROM appointments 
+                  WHERE date = :date AND time = :time";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':date', $date);
+        $stmt->bindParam(':time', $time);
+        $stmt->execute();
+        return $stmt->fetchColumn() == 0;
+    }
+}
+
+// Add this code at the bottom of the file, before the closing PHP tag
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
+    $controller = new AppointmentController();
+    
+    if (isset($_POST['date']) && isset($_POST['time']) && isset($_SESSION['user_name'])) {
+        $date = $_POST['date'];
+        $time = $_POST['time'];
+        $user_name = $_SESSION['user_name'];
+
+        if ($controller->isTimeSlotAvailable($date, $time)) {
+            if ($controller->createAppointment($user_name, $date, $time)) {
+                header("Location: reserve.php?success=true");
+                exit;
+            } else {
+                header("Location: reserve.php?error=failed");
+                exit;
+            }
+        } else {
+            header("Location: reserve.php?error=timeslot_taken");
+            exit;
+        }
     }
 }
 

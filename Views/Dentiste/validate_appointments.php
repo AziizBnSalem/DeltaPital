@@ -1,6 +1,19 @@
 <?php
 require_once '../../Controlleur/AppointmentController.php';
 $controller = new AppointmentController();
+
+// Handle validation action
+if (isset($_GET['action']) && $_GET['action'] === 'validate' && isset($_GET['id'])) {
+    $appointmentId = $_GET['id'];
+    if ($controller->validateAppointment($appointmentId)) {
+        header('Location: validate_appointments.php?success=true');
+        exit;
+    } else {
+        header('Location: validate_appointments.php?error=true');
+        exit;
+    }
+}
+
 $appointments = $controller->getPendingAppointments();
 ?>
 
@@ -36,7 +49,7 @@ $appointments = $controller->getPendingAppointments();
                     <td><?= htmlspecialchars($appointment['status']) ?></td>
                     <td>
                         <?php if ($appointment['status'] == 'pending'): ?>
-                            <a href="../../Views/Dentiste/approved_appointments.php?action=validate&id=<?= $appointment['id'] ?>">Validate</a>
+                            <a href="?action=validate&id=<?= $appointment['id'] ?>" class="btn-validate">Validate</a>
                         <?php else: ?>
                             <span>Approved</span>
                         <?php endif; ?>

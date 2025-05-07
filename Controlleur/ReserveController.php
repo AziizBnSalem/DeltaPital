@@ -2,59 +2,87 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once '../../Model/connexion.php'; // Ensure this file contains the connection logic
-require_once '../../Model/Appointment.php';
+
+require_once __DIR__ . '/../Model/connexion.php';
+require_once __DIR__ . '/../Model/Appointment.php';
 
 // Check if the user is logged in
 if (!isset($_SESSION['user_name'])) {
     die("You must be logged in to reserve an appointment.");
 }
 
-// Get the database connection using the Singleton pattern
+// Get the database connection and create appointment instance
 $database = Database::getInstance();
-$conn = $database->getConnection(); // This will return the connection object
+$conn = $database->getConnection();
+$appointment = new Appointment($conn);
 
-// Check if $conn is defined and connected
-if (!$conn) {
-    die("Database connection failed.");
-}
+// Handle new appointment creation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
+    if (isset($_POST['date']) && isset($_POST['time'])) {
+        $date = $_POST['date'];
+        $time = $_POST['time'];
+        $user_name = $_SESSION['user_name'];
 
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Get form data and sanitize it
-    $date = htmlspecialchars($_POST['date']);
-    $time = htmlspecialchars($_POST['time']);
-    $user_name = htmlspecialchars($_SESSION['user_name']); // Assuming the user's name is stored in the session
-
-    // Ensure that both date and time are not empty
-    if (empty($date) || empty($time)) {
-        $error_message = "Please provide both date and time for the appointment.";
-    } else {
-        // Check if the appointment time already exists for the same date
-        $query = "SELECT * FROM appointments WHERE date = :date AND time = :time AND status != 'validated'";
+        // Check if timeslot is available
+        $query = "SELECT COUNT(*) FROM (
+            SELECT date, time FROM appointments WHERE status != 'validated'
+            UNION
+            SELECT date, time FROM approved_appointments
+        ) AS all_appointments 
+        WHERE date = :date AND time = :time";
+        
         $stmt = $conn->prepare($query);
         $stmt->bindParam(':date', $date);
         $stmt->bindParam(':time', $time);
         $stmt->execute();
-
-        if ($stmt->rowCount() > 0) {
-            $error_message = "The selected appointment time is already reserved.";
-        } else {
-            // Insert the reservation into the database with the user's name
-            $query = "INSERT INTO appointments (user_name, date, time, status) VALUES (:user_name, :date, :time, 'pending')";
-            $stmt = $conn->prepare($query);
-            $stmt->bindParam(':user_name', $user_name);
-            $stmt->bindParam(':date', $date);
-            $stmt->bindParam(':time', $time);
-
-            if ($stmt->execute()) {
-                // Redirect to the appointment page with a success message
-                header("Location: reserve.php?success=true");
-                exit; // Ensure no further code is executed
-            } else {
-                $error_message = "Error reserving the appointment. Please try again.";
-            }
+        
+        if ($stmt->fetchColumn() > 0) {
+            header("Location: ../Views/Client/reserve.php?error=timeslot_taken");
+            exit;
         }
+
+        // Create the appointment
+        $query = "INSERT INTO appointments (user_name, date, time, status) 
+                 VALUES (:user_name, :date, :time, 'pending')";
+        $stmt = $conn->prepare($query);
+        $stmt->bindParam(':user_name', $user_name);
+        $stmt->bindParam(':date', $date);
+        $stmt->bindParam(':time', $time);
+        
+        if ($stmt->execute()) {
+            header("Location: ../Views/Client/reserve.php?success=true");
+        } else {
+            header("Location: ../Views/Client/reserve.php?error=failed");
+        }
+        exit;
     }
 }
-?> 
+
+// Handle delete and update actions
+if (isset($_POST['action'])) {
+    $user_name = $_SESSION['user_name'];
+    
+    if ($_POST['action'] === 'delete' && isset($_POST['appointment_id'])) {
+        if ($appointment->deleteClientAppointment($_POST['appointment_id'], $user_name)) {
+            header("Location: reserve.php?success=deleted");
+            exit;
+        }
+    } elseif ($_POST['action'] === 'update' && isset($_POST['appointment_id'])) {
+        $result = $appointment->updateClientAppointment(
+            $_POST['appointment_id'],
+            $user_name,
+            $_POST['new_date'],
+            $_POST['new_time']
+        );
+        if ($result) {
+            header("Location: reserve.php?success=updated");
+        } else {
+            header("Location: reserve.php?error=timeslot_taken");
+        }
+        exit;
+    }
+}
+
+// Get client's approved appointments
+$approved_appointments = $appointment->getClientApprovedAppointments($_SESSION['user_name']);
+?>
