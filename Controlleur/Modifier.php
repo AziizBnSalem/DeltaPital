@@ -2,19 +2,25 @@
 session_start();
 
 // Use __DIR__ for reliable path resolution
-require_once __DIR__ . '/../Model/user.php';
+require __DIR__ . '/../Model/user.php';
 
 // Initialize messages
 $error_message = '';
 $success_message = '';
 
-// Redirect if not logged in
+// Check if 'id' is set in the session
+if (!isset($_SESSION['id'])) {
+    // Redirect to login page if the user is not logged in
+    header('Location: login.php'); // Adjust the redirection to your login page
+    exit();
+}
 
-$user_id = $_SESSION['id'];
-$user = new User();
+// If 'id' is set, assign it to $id
+$id = $_SESSION['id'];
+$users = new User();
 
 // Fetch user's current data
-$user_data = $user->getUserById($user_id);
+$user_data = $users->getUserById($id);
 if (!$user_data) {
     echo "User not found.";
     exit();
@@ -28,13 +34,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($name) || empty($email)) {
         $error_message = "Both fields are required.";
     } else {
-        if ($user->updateUser($user_id, $name, $email)) {
+        if ($users->updateUser($id, $name, $email)) {
             $success_message = "Profile updated successfully!";
-            $user_data = $user->getUserById($user_id); // Refresh data
+            $user_data = $users->getUserById($id); // Refresh data
         } else {
             $error_message = "Failed to update profile.";
         }
     }
 }
+
 ?>
 
