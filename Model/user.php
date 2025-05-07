@@ -21,6 +21,7 @@ class User {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Method to get a user by ID
     public function getUserById($id) {
         $query = "SELECT id, name, email FROM users WHERE id = :id";
         $stmt = $this->conn->prepare($query);  // Use PDO to prepare the statement
@@ -29,6 +30,7 @@ class User {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // Method to update a user
     public function updateUser($id, $name, $email) {
         $query = "UPDATE users SET name = :name, email = :email WHERE id = :id";
         $stmt = $this->conn->prepare($query);  // Use PDO to prepare the statement
@@ -38,6 +40,7 @@ class User {
         return $stmt->execute();
     }
 
+    // Method to check if an email already exists
     public function checkEmailExists($email) {
         $query = "SELECT COUNT(*) FROM users WHERE email = :email";
         $stmt = $this->conn->prepare($query);  // Use PDO to prepare the statement
@@ -46,7 +49,8 @@ class User {
         return $stmt->fetchColumn() > 0;
     }
 
-    public function deleteUser($id) {
+    // Method to delete a user, with a check for super_admin role
+    public function deleteUser($id, $currentUserRole) {
         // Query to get the user's role by ID
         $query = "SELECT role FROM users WHERE id = :id";
         $stmt = $this->conn->prepare($query);
@@ -57,11 +61,13 @@ class User {
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
         // Check if the user exists and if their role is 'admin'
-        if ($user && $user['role'] === 'admin') {
-            // Prevent deletion if the user is an admin
-            return false;
+        if ($user && $user['role'] === 'medecin') {
+            // If current user is not a super_admin, prevent deletion
+            if ($currentUserRole !== 'super_admin') {
+                return false;
+            }
         }
-    
+        
         // SQL query to delete the user
         $query = "DELETE FROM users WHERE id = :id";
         
@@ -74,10 +80,5 @@ class User {
         // Execute the query and check if it was successful
         return $stmt->execute();
     }
-    
-    
-    
-    
-    
 }
 ?>
