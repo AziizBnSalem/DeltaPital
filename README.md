@@ -2,7 +2,7 @@
 
 DeltaPital is a cutting-edge project designed to [briefly describe the purpose of your project, e.g., revolutionize digital healthcare, simplify financial management, etc.].
 
-## Technologies Used
+## Technologies Used 
 
 - [PHP](https://www.php.net/)
 - [MySQL](https://www.mysql.com/)
