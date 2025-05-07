@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../../Model/connexion.php'; // Ensure this file contains the connection logic
 require_once '../../Model/Appointment.php';
 
