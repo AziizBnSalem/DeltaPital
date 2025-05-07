@@ -1,0 +1,203 @@
+/* Base Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f7f9fc;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Headings */
+h1, h2 {
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+    color: #222;
+}
+
+/* Tables */
+table {
+    width: 90%;
+    max-width: 1000px;
+    margin: 0 auto 40px;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+th, td {
+    padding: 16px 18px;
+    border: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+th {
+    background-color: #007BFF;
+    color: #fff;
+    font-weight: 500;
+}
+
+tr:nth-child(even) {
+    background-color: #f4f6f9;
+}
+
+tr:hover {
+    background-color: #e9f1ff;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn-home {
+    background-color: #007BFF;
+    color: #fff;
+    margin-top: 20px;
+}
+
+.btn-home:hover {
+    background-color: #0056b3;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+    margin-left: 10px;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+.btn-validate {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-validate:hover {
+    background-color: #218838;
+}
+
+/* Logout Button */
+form button[type="submit"] {
+    background-color: #e50914;
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    font-size: 1rem;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    margin-top: 20px;
+}
+
+form button[type="submit"]:hover {
+    background-color: #c30708;
+}
+
+/* Logo on Home Page */
+.logo-container {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid #fff;
+    margin: 0 auto 30px;
+}
+
+.logo-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Home Page Button Cards */
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+}
+
+.button-container a {
+    width: 240px;
+    height: 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #273c75;
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: 500;
+    border-radius: 15px;
+    transition: 0.3s ease;
+}
+
+.button-container a:hover {
+    background-color: #192a56;
+    transform: scale(1.05);
+}
+
+.button-container a:active {
+    transform: scale(0.97);
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #999;
+    margin-top: 50px;
+}
+
+footer a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: #0056b3;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2rem;
+    }
+
+    .button-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .button-container a {
+        width: 90%;
+        height: 100px;
+        font-size: 1.1rem;
+    }
+
+    table {
+        font-size: 0.95rem;
+    }
+
+    th, td {
+        padding: 12px 10px;
+    }
+}
