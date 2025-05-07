@@ -4,7 +4,6 @@ include_once '../Model/connexion.php';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = $_POST['name'];
     $email = $_POST['email'];
     $password = $_POST['password'];
 
@@ -12,9 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $database = Database::getInstance();
     $conn = $database->getConnection();
 
-    $query = "SELECT * FROM users WHERE name = :name AND email = :email";
+    $query = "SELECT * FROM users WHERE email = :email";
     $stmt = $conn->prepare($query);
-    $stmt->bindParam(':name', $name);
     $stmt->bindParam(':email', $email);
     $stmt->execute();
 
@@ -24,10 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($user['password'] == $password) {
             session_start();
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['name'];
+            $_SESSION['user_name'] = $user['email'];
             $_SESSION['role'] = $user['role'];
 
-            if ($user['role'] == 'admin') {
+            if ($user['role'] == 'super_admin') {
+                header("Location: admin/gestionC.php");
+                exit();
+            } elseif ($user['role'] == 'medecin') {
                 header("Location: Dentiste/home.php");
                 exit();
             } else {
