@@ -22,61 +22,25 @@ if ($user_data === false) {
     echo "User not found!";
     exit();  // Stop further script execution if user is not found
 }
-?>
-<!DOCTYPE html>
+?><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Profile</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f7fc;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-        h1 {
-            text-align: center;
-            margin-top: 50px;
-            font-size: 2em;
-            color: #333;
-        }
-        p {
-            font-size: 1.1rem;
-            text-align: center;
-            margin: 15px 0;
-            color: #555;
-        }
-        a {
-            text-align: center;
-            display: block;
-            margin-top: 20px;
-            font-size: 1.1rem;
-            color: #007BFF;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 1.8em;
-            }
-            p, a {
-                font-size: 1rem;
-            }
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../styles/style.css">
 </head>
 <body>
-    <h1>Your Profile</h1>
-    <p><strong>Name:</strong> <?php echo htmlspecialchars($user_data['name']); ?></p>
-    <p><strong>Email:</strong> <?php echo htmlspecialchars($user_data['email']); ?></p>
+    <nav>
+        <a href="home.php">Home</a>
+        <a href="reserve.php">Reservation</a>
+        <a href="profile.php">Profile</a>
+    </nav>
 
-    <a href="modify.php">Modify Profile</a>
+    <div class="container">
+        <h1>Your Profile</h1>
+        <p><strong>Name:</strong> <?= htmlspecialchars($user_data['name']); ?></p>
+        <p><strong>Email:</strong> <?= htmlspecialchars($user_data['email']); ?></p>
+    </div>
 </body>
 </html>
